@@ -117,88 +117,11 @@ void AudioPluginBetaAudioProcessor::prepareToPlay (double sampleRate, int sample
                                                                                                       2 * (chainSettings.lowCutSlope + 1));
     // lọc ở loa trái
     auto& leftLowCut = leftChain.get<ChainPositions::lowCut>();
-
-    leftLowCut.setBypassed<0>(true);
-    leftLowCut.setBypassed<1>(true);
-    leftLowCut.setBypassed<2>(true);
-    leftLowCut.setBypassed<3>(true);
-
-    // Quá trình tạo option cho lọc thông cao
-    switch (chainSettings.lowCutSlope) {
-    case Slope_12:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        break;
-    case Slope_24:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        *leftLowCut.get<1>().coefficients = *cutCoefficents[1];
-        leftLowCut.setBypassed<1>(false);
-        break;
-    case Slope_36:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        *leftLowCut.get<1>().coefficients = *cutCoefficents[1];
-        leftLowCut.setBypassed<1>(false);
-        *leftLowCut.get<2>().coefficients = *cutCoefficents[2];
-        leftLowCut.setBypassed<2>(false);
-        break;
-    case Slope_48:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        *leftLowCut.get<1>().coefficients = *cutCoefficents[1];
-        leftLowCut.setBypassed<1>(false);
-        *leftLowCut.get<2>().coefficients = *cutCoefficents[2];
-        leftLowCut.setBypassed<2>(false);
-        *leftLowCut.get<3>().coefficients = *cutCoefficents[3];
-        leftLowCut.setBypassed<3>(false);
-        break;
-    default:
-        break;
-    }
-
+    updateCutFilter(leftLowCut, cutCoefficents, chainSettings.lowCutSlope);
 
     // thông cao ở tai phải
     auto& rightLowCut = rightChain.get<ChainPositions::lowCut>();
-
-    rightLowCut.setBypassed<0>(true);
-    rightLowCut.setBypassed<1>(true);
-    rightLowCut.setBypassed<2>(true);
-    rightLowCut.setBypassed<3>(true);
-
-    // Quá trình tạo option cho lọc thông cao
-    switch (chainSettings.lowCutSlope) {
-    case Slope_12:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        break;
-    case Slope_24:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        *rightLowCut.get<1>().coefficients = *cutCoefficents[1];
-        rightLowCut.setBypassed<1>(false);
-        break;
-    case Slope_36:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        *rightLowCut.get<1>().coefficients = *cutCoefficents[1];
-        rightLowCut.setBypassed<1>(false);
-        *rightLowCut.get<2>().coefficients = *cutCoefficents[2];
-        rightLowCut.setBypassed<2>(false);
-        break;
-    case Slope_48:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        *rightLowCut.get<1>().coefficients = *cutCoefficents[1];
-        rightLowCut.setBypassed<1>(false);
-        *rightLowCut.get<2>().coefficients = *cutCoefficents[2];
-        rightLowCut.setBypassed<2>(false);
-        *rightLowCut.get<3>().coefficients = *cutCoefficents[3];
-        rightLowCut.setBypassed<3>(false);
-        break;
-    default:
-        break;
-    }
+    updateCutFilter(rightLowCut, cutCoefficents, chainSettings.lowCutSlope);
 }
 
 void AudioPluginBetaAudioProcessor::releaseResources()
@@ -257,88 +180,11 @@ void AudioPluginBetaAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
         2 * (chainSettings.lowCutSlope + 1));
     // lọc ở loa trái
     auto& leftLowCut = leftChain.get<ChainPositions::lowCut>();
+    updateCutFilter(leftLowCut, cutCoefficents, chainSettings.lowCutSlope);
 
-    leftLowCut.setBypassed<0>(true);
-    leftLowCut.setBypassed<1>(true);
-    leftLowCut.setBypassed<2>(true);
-    leftLowCut.setBypassed<3>(true);
-
-    // Quá trình tạo option cho lọc thông cao
-    switch (chainSettings.lowCutSlope) {
-    case Slope_12:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        break;
-    case Slope_24:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        *leftLowCut.get<1>().coefficients = *cutCoefficents[1];
-        leftLowCut.setBypassed<1>(false);
-        break;
-    case Slope_36:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        *leftLowCut.get<1>().coefficients = *cutCoefficents[1];
-        leftLowCut.setBypassed<1>(false);
-        *leftLowCut.get<2>().coefficients = *cutCoefficents[2];
-        leftLowCut.setBypassed<2>(false);
-        break;
-    case Slope_48:
-        *leftLowCut.get<0>().coefficients = *cutCoefficents[0];
-        leftLowCut.setBypassed<0>(false);
-        *leftLowCut.get<1>().coefficients = *cutCoefficents[1];
-        leftLowCut.setBypassed<1>(false);
-        *leftLowCut.get<2>().coefficients = *cutCoefficents[2];
-        leftLowCut.setBypassed<2>(false);
-        *leftLowCut.get<3>().coefficients = *cutCoefficents[3];
-        leftLowCut.setBypassed<3>(false);
-        break;
-    default:
-        break;
-    }
-
-
-    // thông cao ở tai phải
+    // thông cao ở loa phải
     auto& rightLowCut = rightChain.get<ChainPositions::lowCut>();
-
-    rightLowCut.setBypassed<0>(true);
-    rightLowCut.setBypassed<1>(true);
-    rightLowCut.setBypassed<2>(true);
-    rightLowCut.setBypassed<3>(true);
-
-    // Quá trình tạo option cho lọc thông cao
-    switch (chainSettings.lowCutSlope) {
-    case Slope_12:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        break;
-    case Slope_24:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        *rightLowCut.get<1>().coefficients = *cutCoefficents[1];
-        rightLowCut.setBypassed<1>(false);
-        break;
-    case Slope_36:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        *rightLowCut.get<1>().coefficients = *cutCoefficents[1];
-        rightLowCut.setBypassed<1>(false);
-        *rightLowCut.get<2>().coefficients = *cutCoefficents[2];
-        rightLowCut.setBypassed<2>(false);
-        break;
-    case Slope_48:
-        *rightLowCut.get<0>().coefficients = *cutCoefficents[0];
-        rightLowCut.setBypassed<0>(false);
-        *rightLowCut.get<1>().coefficients = *cutCoefficents[1];
-        rightLowCut.setBypassed<1>(false);
-        *rightLowCut.get<2>().coefficients = *cutCoefficents[2];
-        rightLowCut.setBypassed<2>(false);
-        *rightLowCut.get<3>().coefficients = *cutCoefficents[3];
-        rightLowCut.setBypassed<3>(false);
-        break;
-    default:
-        break;
-    }
+    updateCutFilter(rightLowCut, cutCoefficents, chainSettings.lowCutSlope);
 
     // tạo 1 block để extract channel (left, right) từ cái buffer
     juce::dsp::AudioBlock<float> block(buffer);
