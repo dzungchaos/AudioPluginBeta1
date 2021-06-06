@@ -90,7 +90,11 @@ private:
         HighCut
     };
 
+    void updatePeakFilter(const ChainSettings& chainSettings);
+    using Coefficents = Filter::CoefficientsPtr;
+    static void updateCoefficents(Coefficents& old, const Coefficents& replacements);
 
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioPluginBetaAudioProcessor)
 };
