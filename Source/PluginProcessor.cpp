@@ -251,10 +251,7 @@ void updateCoefficents(Coefficents& old, const Coefficents& replacements) {
 }
 
 void AudioPluginBetaAudioProcessor::updateLowCutFilters(const ChainSettings& chainSettings) {
-    auto cutCoefficents = juce::dsp::FilterDesign<float>::designIIRHighpassHighOrderButterworthMethod(chainSettings.lowCutFreq,
-        getSampleRate(),
-        2 * (chainSettings.lowCutSlope + 1));
-
+    auto cutCoefficents = makeLowCutFilter(chainSettings, getSampleRate());
     // lọc ở loa trái + phải
     auto& leftLowCut = leftChain.get<ChainPositions::lowCut>();
     auto& rightLowCut = rightChain.get<ChainPositions::lowCut>();
@@ -263,10 +260,7 @@ void AudioPluginBetaAudioProcessor::updateLowCutFilters(const ChainSettings& cha
 }
 
 void AudioPluginBetaAudioProcessor::updateHighCutFilters(const ChainSettings& chainSettings) {
-    auto highCutCoefficents = juce::dsp::FilterDesign<float>::designIIRLowpassHighOrderButterworthMethod(chainSettings.highCutFreq,
-        getSampleRate(),
-        2 * (chainSettings.highCutSlope + 1));
-
+    auto highCutCoefficents = makeHighCutFilter(chainSettings, getSampleRate());
     // lọc thông thấp ở loa trái + phải
     auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();
     auto& rightHighCut = rightChain.get<ChainPositions::HighCut>();
