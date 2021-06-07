@@ -76,11 +76,6 @@ void RotarySliderWithLabels::paint(juce::Graphics& g) {
 
     auto sliderBounds = getSliderBounds();
 
-    //g.setColour(Colours::red);
-    //g.drawRect(getLocalBounds());
-    //g.setColour(Colours::yellow);
-    //g.drawRect(sliderBounds);
-
     getLookAndFeel().drawRotarySlider(g, 
         sliderBounds.getX(), 
         sliderBounds.getY(), 
@@ -121,7 +116,6 @@ void RotarySliderWithLabels::paint(juce::Graphics& g) {
 }
 
 juce::Rectangle<int> RotarySliderWithLabels::getSliderBounds() const {
-    // return getLocalBounds();
     auto bounds = getLocalBounds();
 
     auto size = juce::jmin(bounds.getWidth(), bounds.getHeight());
@@ -223,8 +217,7 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
 
     g.drawImage(background, getLocalBounds().toFloat());
         
-    // auto responseArea = getLocalBounds();
-    auto responseArea = getAnalysisArea();    // getRenderArea();
+    auto responseArea = getAnalysisArea(); 
 
     auto w = responseArea.getWidth();
 
@@ -302,9 +295,9 @@ void ResponseCurveComponent::resized() {
     Graphics g(background);
 
     Array<float> freqs{
-        20, /*30, 40,*/ 50, 100,
-        200, /*300, 400,*/ 500, 1000,
-        2000, /*3000, 4000,*/ 5000, 10000,
+        20, 50, 100,
+        200, 500, 1000,
+        2000, 5000, 10000,
         20000
     };
 
@@ -337,7 +330,6 @@ void ResponseCurveComponent::resized() {
         g.drawHorizontalLine(y, left, right);
     }
 
-    // g.drawRect(getAnalysisArea());
     g.setColour(Colours::lightgrey);
     const int fontHeight = 10;
     g.setFont(fontHeight);
@@ -386,6 +378,15 @@ void ResponseCurveComponent::resized() {
         g.setColour(gDb == 0.f ? Colour(0u, 172u, 1u) : Colours::lightgrey);
 
         g.drawFittedText(str, r, juce::Justification::centred, 1);
+
+        str.clear();
+        str << (gDb - 24.f);
+
+        r.setX(1);
+        textWidth = g.getCurrentFont().getStringWidth(str);
+        r.setSize(textWidth, fontHeight);
+        g.setColour(Colours::lightgrey);
+        g.drawFittedText(str, r, juce::Justification::centred, 1);
     }
 
 }
@@ -393,7 +394,6 @@ void ResponseCurveComponent::resized() {
 juce::Rectangle<int> ResponseCurveComponent::getRenderArea() {
     auto bounds = getLocalBounds();
 
-    // bounds.reduce(10, 8);
     bounds.removeFromTop(12);
     bounds.removeFromBottom(2);
     bounds.removeFromLeft(20);
