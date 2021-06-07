@@ -112,6 +112,12 @@ void AudioPluginBetaAudioProcessor::prepareToPlay (double sampleRate, int sample
 
     leftChannelFifo.prepare(samplesPerBlock);
     rightChannelFifo.prepare(samplesPerBlock);
+
+    osc.initialise([](float x) { return std::sin(x); });
+
+    spec.numChannels = getTotalNumOutputChannels();
+    osc.prepare(spec);
+    osc.setFrequency(100);
 }
 
 void AudioPluginBetaAudioProcessor::releaseResources()
@@ -165,6 +171,15 @@ void AudioPluginBetaAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     // tạo 1 block để extract channel (left, right) từ cái buffer
     juce::dsp::AudioBlock<float> block(buffer);
+
+    //buffer.clear();
+
+    //for (int i = 0; i < buffer.getNumSamples(); ++i) {
+    //    buffer.setSample(0, i, osc.processSample(0));
+    //}
+
+    //juce::dsp::ProcessContextReplacing<float> stereoContext(block);
+    //osc.process(stereoContext);
 
     // tạo các block đại diện cho các kênh
     auto leftBlock = block.getSingleChannelBlock(0);
