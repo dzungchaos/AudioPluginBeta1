@@ -232,18 +232,21 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts) {
     return settings;
 }
 
-void AudioPluginBetaAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings) {
-    auto peakCoefficients = juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-        getSampleRate(),
+Coefficents makePeakFilter(const ChainSettings& chainSettings, double sampleRate) {
+    return juce::dsp::IIR::Coefficients<float>::makePeakFilter(
+        sampleRate,
         chainSettings.peakFreq,
         chainSettings.peakQuality,
         juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibels));
-        
+}
+
+void AudioPluginBetaAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings) {
+    auto peakCoefficients = makePeakFilter(chainSettings, getSampleRate());
     updateCoefficents(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     updateCoefficents(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 }
 
-void AudioPluginBetaAudioProcessor::updateCoefficents(Coefficents& old, const Coefficents& replacements) {
+void updateCoefficents(Coefficents& old, const Coefficents& replacements) {
     *old = *replacements;
 }
 
