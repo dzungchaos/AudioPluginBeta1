@@ -249,6 +249,10 @@ ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts) {
     settings.lowCutSlope = static_cast<Slope>(apvts.getRawParameterValue("LowCut Slope")->load());
     settings.highCutSlope = static_cast<Slope>(apvts.getRawParameterValue("HighCut Slope")->load());
 
+    settings.lowCutBypassed = apvts.getRawParameterValue("LowCut Bypassed")->load() > 0.5f;
+    settings.peakBypassed = apvts.getRawParameterValue("Peak Bypassed")->load() > 0.5f;
+    settings.highCutBypassed = apvts.getRawParameterValue("HighCut Bypassed")->load() > 0.5f;
+    
     return settings;
 }
 
@@ -262,6 +266,10 @@ Coefficents makePeakFilter(const ChainSettings& chainSettings, double sampleRate
 
 void AudioPluginBetaAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings) {
     auto peakCoefficients = makePeakFilter(chainSettings, getSampleRate());
+
+    leftChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
+    rightChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
+
     updateCoefficents(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     updateCoefficents(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 }
@@ -275,6 +283,10 @@ void AudioPluginBetaAudioProcessor::updateLowCutFilters(const ChainSettings& cha
     // lọc ở loa trái + phải
     auto& leftLowCut = leftChain.get<ChainPositions::lowCut>();
     auto& rightLowCut = rightChain.get<ChainPositions::lowCut>();
+
+    leftChain.setBypassed<ChainPositions::lowCut>(chainSettings.lowCutBypassed);
+    rightChain.setBypassed<ChainPositions::lowCut>(chainSettings.lowCutBypassed);
+
     updateCutFilter(leftLowCut, cutCoefficents, chainSettings.lowCutSlope);
     updateCutFilter(rightLowCut, cutCoefficents, chainSettings.lowCutSlope);  
 }
@@ -284,6 +296,10 @@ void AudioPluginBetaAudioProcessor::updateHighCutFilters(const ChainSettings& ch
     // lọc thông thấp ở loa trái + phải
     auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();
     auto& rightHighCut = rightChain.get<ChainPositions::HighCut>();
+
+    leftChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
+    rightChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
+
     updateCutFilter(leftHighCut, highCutCoefficents, chainSettings.highCutSlope);
     updateCutFilter(rightHighCut, highCutCoefficents, chainSettings.highCutSlope);    
 }
@@ -324,6 +340,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     // tạo choice cho chế độ lọc thông
     layout.add(std::make_unique<juce::AudioParameterChoice>("LowCut Slope", "LowCut Slope", stringArray, 0));
     layout.add(std::make_unique<juce::AudioParameterChoice>("HighCut Slope", "HighCut Slope", stringArray, 0));
+
+    layout.add(std::make_unique<juce::AudioParameterBool>("LowCut Bypassed", "LowCut Bypassed", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("Peak Bypassed", "Peak Bypassed", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("HighCut Bypassed", "HighCut Bypassed", false));
+    layout.add(std::make_unique<juce::AudioParameterBool>("Analyzer Enabled", "Analyzer Enabled", true));
+
+    
 
     return layout;
 }
