@@ -185,8 +185,8 @@ bool AudioPluginBetaAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* AudioPluginBetaAudioProcessor::createEditor()
 {
-    // return new AudioPluginBetaAudioProcessorEditor (*this);
-    return new juce::GenericAudioProcessorEditor(*this);
+    return new AudioPluginBetaAudioProcessorEditor (*this);
+    // return new juce::GenericAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -195,12 +195,25 @@ void AudioPluginBetaAudioProcessor::getStateInformation (juce::MemoryBlock& dest
     // You should use this method to store your parameters in the memory block.
     // You could do that either as raw data, or use the XML or ValueTree classes
     // as intermediaries to make it easy to save and load complex data.
+    
+    juce::MemoryOutputStream mos(destData, true);
+    apvts.state.writeToStream(mos);
 }
 
 void AudioPluginBetaAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     // You should use this method to restore your parameters from this memory block,
     // whose contents will have been created by the getStateInformation() call.
+
+    // Có thể trích xuất dữ liệu trong treestate dùng help function
+    // Việc cẩn làm là kiểm tra xem treestate có valid trước khi copy không
+    auto tree = juce::ValueTree::readFromData(data, sizeInBytes);
+    if (tree.isValid()) {
+        apvts.replaceState(tree);
+        updateFilters();
+    }
+
+
 }
 
 ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts) {
