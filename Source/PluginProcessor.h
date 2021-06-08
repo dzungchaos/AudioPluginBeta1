@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 
 #include <array>
+
+// GUI thread dùng cái này để lấy (dữ liệu từ) Block SCSF tạo ra
 template<typename T>
 struct Fifo
 {
@@ -80,6 +82,7 @@ enum Channel {
     Left    // effectively 1
 };
 
+// lấy mẫu từ buffer rồi đưa vào block (các context)
 template<typename BlockType>
 struct SingleChannelSampleFifo
 {
@@ -271,6 +274,7 @@ public:
 
     using BlockType = juce::AudioBuffer<float>;
     // can duoc Prepared
+    // 2 kênh fifo
     SingleChannelSampleFifo<BlockType> leftChannelFifo{ Channel::Left };
     SingleChannelSampleFifo<BlockType> rightChannelFifo{ Channel::Right };
 

@@ -193,6 +193,7 @@ void AudioPluginBetaAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     leftChain.process(leftContext);
     rightChain.process(rightContext);
 
+    // trong quá trình xử lý khối thì cần update liên tục
     leftChannelFifo.update(buffer);
     rightChannelFifo.update(buffer);
 }

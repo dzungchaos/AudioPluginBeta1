@@ -34,11 +34,12 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g,
         auto center = bounds.getCentre();
         Path p;
 
+        // hình cn bao quanh giá trị hiện tại
         Rectangle<float> r;
         r.setLeft(center.getX() - 2);
         r.setRight(center.getX() + 2);
         r.setTop(bounds.getY());
-        r.setBottom(center.getY() - rswl->getTextHeight() * 1.5);
+        r.setBottom(center.getY() - rswl->getTextHeight() * 1.5); //cho chữ ở giũa nên phải giảm độ dài hcn
 
         p.addRoundedRectangle(r, 2.f);
         
@@ -122,7 +123,7 @@ void LookAndFeel::drawToggleButton(juce::Graphics& g,
 void RotarySliderWithLabels::paint(juce::Graphics& g) {
     using namespace juce;
 
-    // tạo góc
+    // tạo góc 7 giờ và 5 giờ
     auto startAng = degreesToRadians(180.f + 45.f);
     auto endAng = degreesToRadians(180.f - 45.f) + MathConstants<float>::twoPi;
 
@@ -156,6 +157,7 @@ void RotarySliderWithLabels::paint(juce::Graphics& g) {
 
         auto c = center.getPointOnCircumference(radius + getTextHeight() * 0.5f + 1, ang);
 
+        // hình cn bao nhãn dưới
         Rectangle<float> r;
         auto str = labels[i].label;
         r.setSize(g.getCurrentFont().getStringWidth(str), getTextHeight());
@@ -230,6 +232,7 @@ rightPathProducer(audioProcessor.rightChannelFifo)
 
     updateChain();
 
+    // 
     startTimerHz(60);
 }
 
@@ -246,7 +249,7 @@ void ResponseCurveComponent::parameterValueChanged(int parameterIndex, float new
 
 void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate) {
     juce::AudioBuffer<float> tempIncomingBuffer;
-
+        
     while (leftChannelFifo->getNumCompleteBuffersAvailable() > 0) {
         if (leftChannelFifo->getAudioBuffer(tempIncomingBuffer)) {
             auto size = tempIncomingBuffer.getNumSamples();
@@ -299,6 +302,7 @@ void ResponseCurveComponent::timerCallback() {
         rightPathProducer.process(fftBounds, sampleRate);
     }
 
+    // nếu atomic là true thì set thành false và trả về true
     if (parameterChanged.compareAndSetBool(false, true)) {
         // update the mono chain
         updateChain();
@@ -317,9 +321,11 @@ void ResponseCurveComponent::updateChain() {
     monoChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
     monoChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
 
+    // kết nối coefficients của peak khi update chain và vẽ lại trên đường thẳng phản hồi 
     auto peakCoefficients = makePeakFilter(chainSettings, audioProcessor.getSampleRate());
     updateCoefficents(monoChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 
+    // kết nối coefficients của cut filter khi update chain và vẽ lại trên đường thẳng phản hồi
     auto lowCutCoefficients = makeLowCutFilter(chainSettings, audioProcessor.getSampleRate());
     auto highCutCoefficients = makeHighCutFilter(chainSettings, audioProcessor.getSampleRate());
 
@@ -333,6 +339,7 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(Colours::black);
 
+    // Vẽ lưới
     g.drawImage(background, getLocalBounds().toFloat());
         
     auto responseArea = getAnalysisArea(); 
@@ -355,6 +362,7 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
         // ánh xạ từ kgian điểm ảnh sang k gian tần số
         auto freq = mapToLog10((double(i) / double(w)), 20.0, 20000.0);
 
+        // Tăng từ trái qua phải mag = mag * ...
         if (!monoChain.isBypassed<ChainPositions::Peak>())
             mag *= peak.coefficients->getMagnitudeForFrequency(freq, sampleRate);
 
@@ -396,27 +404,33 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
         return jmap(input, -24.0, 24.0, outputMin, outputMax);
     };
 
+    // subpath để vẽ đường thẳng từ trái qua
     responseCurve.startNewSubPath(responseArea.getX(), map(mags.front()));
 
+    // kéo dài từ trái qua phải xong thêm từng mag vào đường thẳng
     for (size_t i = 1; i < mags.size(); ++i) {
         responseCurve.lineTo(responseArea.getX() + i, map(mags[i]));
     }
 
     if (shouldShowFFTAnalysis) {
+        // phổ kênh trái
         auto leftChannelFFTPath = leftPathProducer.getPath();
         leftChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
         g.setColour(Colours::skyblue);
         g.strokePath(leftChannelFFTPath, PathStrokeType(1.f));
 
+        // // phổ kênh phải
         auto rightChannelFFTPath = rightPathProducer.getPath();
         rightChannelFFTPath.applyTransform(AffineTransform().translation(responseArea.getX(), responseArea.getY()));
         g.setColour(Colours::lightyellow);
         g.strokePath(rightChannelFFTPath, PathStrokeType(1.f));
     }
-        
+    
+    // vẽ viền bao quanh (render area)
     g.setColour(Colours::orange);
     g.drawRoundedRectangle(getRenderArea().toFloat(), 4.f, 1.f);
 
+    // vẽ đường thẳng màu trắng
     g.setColour(Colours::white);
     g.strokePath(responseCurve, PathStrokeType(2.f));
 }
@@ -433,7 +447,7 @@ void ResponseCurveComponent::resized() {
         2000, 5000, 10000,
         20000
     };
-
+    
     auto renderArea = getAnalysisArea();
     auto left = renderArea.getX();
     auto right = renderArea.getRight();
@@ -441,12 +455,14 @@ void ResponseCurveComponent::resized() {
     auto bottom = renderArea.getBottom();
     auto width = renderArea.getWidth();
 
+    // map freq sang pixel
     Array<float> xs;
     for (auto f : freqs) {
         auto normX = mapFromLog10(f, 20.f, 20000.f);
         xs.add(left + width * normX);
     }
 
+    // vẽ trục y cho các tần số khác nhau
     g.setColour(Colours::dimgrey);
     for (auto x : xs) {
         g.drawVerticalLine(x, top, bottom);
@@ -456,6 +472,7 @@ void ResponseCurveComponent::resized() {
         -24, -12, 0, 12, 24
     };
 
+    // vẽ trục x khi gain
     for (auto gDb : gain) {
         auto y = jmap(gDb, -24.f, 24.f, float(bottom), float(top));
                 
@@ -463,6 +480,7 @@ void ResponseCurveComponent::resized() {
         g.drawHorizontalLine(y, left, right);
     }
 
+    // vẽ các chữ trên lưới
     g.setColour(Colours::lightgrey);
     const int fontHeight = 10;
     g.setFont(fontHeight);
@@ -485,6 +503,7 @@ void ResponseCurveComponent::resized() {
 
         auto textWidth = g.getCurrentFont().getStringWidth(str);
 
+        // hcn bao quanh chữ trên lưới
         Rectangle<int> r;
         r.setSize(textWidth, fontHeight);
         r.setCentre(x, 0);
@@ -493,6 +512,7 @@ void ResponseCurveComponent::resized() {
         g.drawFittedText(str, r, juce::Justification::centred, 1);
     }
 
+    // tương tự như trên mà đây là chữ của gain
     for (auto gDb : gain) {
         auto y = jmap(gDb, -24.f, 24.f, float(bottom), float(top));
 

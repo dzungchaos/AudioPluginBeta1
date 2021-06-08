@@ -17,6 +17,7 @@ enum FFTOrder {
     order8192
 };
 
+// lấy dữ liệu block từ fifo để biến đổi dữ liệu âm thanh thành dữ liệu FFT
 template<typename BlockType>
 struct FFTDataGenerator
 {
@@ -95,6 +96,7 @@ private:
     Fifo<BlockType> fftDataFifo;
 };
 
+// Biến đổi FFT data thành path
 template<typename PathType>
 struct AnalyzerPathGenerator
 {
@@ -166,6 +168,8 @@ private:
 
 
 struct LookAndFeel : juce::LookAndFeel_V4 {
+    // tạo 1 bound hay nền cho cái rotary sliders
+    // Ở đây là tạo vòng tròn
     void drawRotarySlider(juce::Graphics&,
         int x, int y, int width, int height,
         float sliderPosProportional,
@@ -180,6 +184,7 @@ struct LookAndFeel : juce::LookAndFeel_V4 {
 
 };
 
+// Vẽ các con sliders có nhãn ở 2 bên với hậu tố (hoặc nhãn)
 struct RotarySliderWithLabels : juce::Slider 
 {
     RotarySliderWithLabels(juce::RangedAudioParameter& rap, const juce::String& unitSuffix) :
@@ -203,14 +208,21 @@ struct RotarySliderWithLabels : juce::Slider
     juce::Array<LabelPos> labels;
 
     void paint(juce::Graphics& g) override;
+    // Shrink elipse để thành vòng tròn
     juce::Rectangle<int> getSliderBounds() const;
+
     int getTextHeight() const { return 14; }
+
     juce::String getDisplayString() const;
 
 private:
+    // Thằng lookandfeel là thằng khởi tạo thằng này nên cần có lnf
     LookAndFeel lnf;
 
+    // này nó derives mọi thằng audio param khác
     juce::RangedAudioParameter* param;
+
+    // hậu tố (đơn vị, k, ...)
     juce::String suffix;
 };
 
@@ -220,6 +232,13 @@ struct PathProducer {
         leftChannelFFTDataGenerator.changeOrder(FFTOrder::order2048);
         monoBuffer.setSize(1, leftChannelFFTDataGenerator.getFFTSize());
     }
+
+    /*
+    Khi còn buffer để lấy từ scsf
+        nếu pull được thì
+            gửi nó đến fft data gen
+    Bao gồm cả gen path trong này
+    */
     void process(juce::Rectangle<float> fftBounds, double sampleRate);
     juce::Path getPath() { return leftChannelFFTPath; }
 
@@ -235,19 +254,27 @@ private:
     juce::Path leftChannelFFTPath;
 };
 
+// Lớp vẽ đường cong phản hồi
+// kế thừa listener: 
+// kế thùa timer: 
+// lấy dữ liệu của scsf luôn (2 kênh)
 struct ResponseCurveComponent : juce::Component,
     juce::AudioProcessorParameter::Listener,
     juce::Timer {
     ResponseCurveComponent(AudioPluginBetaAudioProcessor&);
     ~ResponseCurveComponent();
 
+    // Nếu param thay đổi, set atomic flag thành true
     void parameterValueChanged(int parameterIndex, float newValue) override;
 
     void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override {  }
     
+    // xử lý khi biến tgian thay đổi
     void timerCallback() override;
 
     void paint(juce::Graphics& g) override;
+
+    // gọi cái này để tạo lưới trước khi vẽ
     void resized() override;
 
     void toggleAnalysisEnablement(bool enabled) {
@@ -255,16 +282,23 @@ struct ResponseCurveComponent : juce::Component,
     }
 private:
     AudioPluginBetaAudioProcessor& audioProcessor;
+
+    // kiểm tra xem param có thay đổi?
     juce::Atomic<bool> parameterChanged{ false };
 
     MonoChain monoChain;
 
+    // dùng này để gọn và để nó tự lưu mỗi khi khởi động gui
     void updateChain();
 
+    // background của cái response curve grid
     juce::Image background;
 
+    // Tạo vùng để render hình ảnh
     juce::Rectangle<int> getRenderArea();
 
+    // Tạo vùng để lũ phân tích hiển thị
+    // response curve cũng được vẽ trong này
     juce::Rectangle<int> getAnalysisArea();
     
     PathProducer leftPathProducer, rightPathProducer;
